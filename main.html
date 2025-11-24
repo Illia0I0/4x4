@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Peregrine Warriors — Cinematic 4x4 Edition</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'f1-gold': '#FCD34D',
+                        'f1-red': '#E10600',
+                        'pw-dark': '#0A0A0A',
+                    },
+                    fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] }
+                }
+            }
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Draggable.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.2/vanilla-tilt.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js" defer></script>
+    <script type="module" src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+
+    <style>
+        /* Base Colors */
+        :root{--bg: #000;--gold:#FCD34D}
+        html,body{background:var(--bg);color:#fff}
+        body{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+
+        /* Gold Styling */
+        .gold-glow{box-shadow:0 0 40px rgba(252,211,77,0.15)}
+        .gold-border{border:1px solid rgba(252,211,77,0.15); box-shadow: 0 0 8px rgba(252,211,77,0.04);}
+        .soft-gold{color:rgba(252,211,77,0.95)}
+
+        /* Glass Effect */
+        .glass{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));backdrop-filter: blur(8px);}
+
+        /* Text Animation Setup */
+        .split-letter{display:inline-block;overflow:hidden}
+        .split-letter-span{display:inline-block;transform:translateY(110%)}
+
+        /* Utility Classes */
+        .particle-canvas{position:absolute;inset:0;pointer-events:none}
+        .scroll-indicator{animation:float 1.8s infinite}
+        @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(8px)}100%{transform:translateY(0)}}
+        .gold-sweep{background:linear-gradient(90deg, transparent, rgba(252,211,77,0.07), transparent);mix-blend-mode:screen}
+        .constrained{max-width:1200px;margin-left:auto;margin-right:auto;padding-left:1rem;padding-right:1rem}
+        .underline-anim{background-image:linear-gradient(to right,var(--gold),var(--gold));background-repeat:no-repeat;background-size:0% 2px;background-position:0 100%;transition:background-size .45s ease}
+        .underline-anim:hover{background-size:100% 2px}
+        .hero-media{transform-origin:center;transition:transform 0.6s cubic-bezier(.2,.9,.2,1)}
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar{width:8px} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:999px}
+    </style>
+</head>
+<body class="antialiased font-sans leading-relaxed">
+
+
+
+<header class="fixed inset-x-0 top-0 z-40 backdrop-blur-md bg-black/70 border-b border-f1-gold/10">
+    <div class="constrained h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <img src="Media.png" alt="Peregrine Warriors Logo" class="h-10 md:h-12 w-auto transition-transform hover:scale-105" id="top-logo"/>
+            <div class="hidden md:block">
+                <h1 class="text-lg font-extrabold tracking-tight uppercase">Peregrine <span class="text-f1-gold">Warriors</span></h1>
+            </div>
+        </div>
+        <nav class="hidden lg:flex items-center gap-8 text-sm font-semibold text-gray-300 uppercase" id="main-nav">
+            <a href="#hero" class="hover:text-f1-gold active-link">Home</a>
+            <a href="#origin" class="hover:text-f1-gold">Origin</a>
+            <a href="#team" class="hover:text-f1-gold">Team</a>
+            <a href="#prototypes" class="hover:text-f1-gold">Prototypes</a>
+            <a href="#kit" class="hover:text-f1-gold">Kit</a>
+            <a href="#sponsors" class="hover:text-f1-gold">Sponsors</a>
+        </nav>
+        <div class="flex items-center gap-3">
+            <a href="#prototypes" class="micro-cta gold-glow text-sm text-black font-semibold bg-f1-gold px-4 py-2 rounded-full hidden md:inline-flex hover:shadow-2xl transition-shadow">View Prototypes</a>
+            <button id="mobile-menu" class="lg:hidden p-2 rounded-md border border-white/5 hover:bg-white/10 transition-colors"><svg data-lucide="menu" class="w-6 h-6 text-white"></svg></button>
+        </div>
+    </div>
+</header>
+
+<main class="pt-16">
+
+    <section id="hero" class="relative min-h-[92vh] flex items-center justify-center overflow-hidden bg-pw-dark">
+        <canvas id="particles" class="particle-canvas" aria-hidden="true"></canvas>
+
+        <div class="absolute inset-0 -z-10">
+            <img src="Media.png" alt="Yas track" class="w-full h-full object-cover opacity-100 hero-media" id="hero-bg">
+            <div class="absolute inset-0 gold-sweep mix-blend-screen opacity-30"></div>
+            <div class="absolute inset-0 bg-black/60"></div>
+        </div>
+
+        <div class="constrained relative z-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-24">
+            <div class="text-center lg:text-left">
+                <div class="mb-6 flex items-center gap-4 justify-center lg:justify-start">
+                    <img src="Media.png" alt="logo" class="h-20 w-auto drop-shadow-[0_0_30px_rgba(252,211,77,0.25)]" id="hero-logo"/>
+                    <div class="text-left">
+                        <p class="text-sm uppercase text-gray-300 tracking-widest">Land Rover 4x4 in Schools</p>
+                        <p class="text-2xl font-extrabold soft-gold">Peregrine Warriors</p>
+                    </div>
+                </div>
+
+                <h2 class="text-4xl md:text-6xl font-black leading-tight mb-6 overflow-hidden">
+                    <span class="split-letter"><span id="engineered" class="split-letter-span">Engineered</span></span> to <span class="text-f1-gold">Dominate</span>
+                </h2>
+
+                <p class="text-gray-300 max-w-xl">We are a young team with a fierce ambition — combining engineering, design and drive to build competition-winning 4x4 vehicles. Warriors are ready for a new season!</p>
+
+                <div class="mt-8 flex items-center gap-4 justify-center lg:justify-start">
+                    <a href="#prototypes" class="px-6 py-3 rounded-full inline-flex items-center gap-3 font-bold text-black bg-f1-gold shadow-xl gold-glow transform hover:scale-105 transition-all">View Prototypes <svg data-lucide="chevron-right" class="h-4 w-4"></svg></a>
+                    <a href="#team" class="px-4 py-2 rounded-md border border-f1-gold/20 text-sm interactive underline-anim">Meet the Team</a>
+                </div>
+
+                <div class="mt-10">
+                    <div class="inline-flex items-center gap-3 text-sm text-gray-300">
+                        <svg data-lucide="chevrons-right" class="h-4 w-4 text-f1-gold"></svg>
+                        <span class="uppercase tracking-wide">Power · Precision · Perseverance</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center lg:justify-end">
+                <div id="vehicle" class="relative w-[360px] md:w-[520px] lg:w-[600px] translate-y-6">
+                    <img src="bg.jpg" alt="Apex Dominator" class="w-full rounded-2xl shadow-2xl object-cover hero-media gold-border" />
+                    <div class="absolute inset-0 rounded-2xl pointer-events-none" id="vehicle-overlay"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="absolute bottom-12 w-full flex justify-center z-30">
+            <div class="text-center text-gray-300">
+                <div class="mx-auto w-8 h-12 border-2 border-gray-400 rounded-2xl flex items-start justify-center p-1"><div class="w-2 h-2 bg-f1-gold rounded-full scroll-indicator"></div></div>
+                <div class="mt-3 text-xs uppercase tracking-widest">Scroll</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="origin" class="py-20 md:py-28 bg-black/95 border-t border-f1-gold/6">
+        <div class="constrained text-center">
+            <h3 class="text-3xl md:text-4xl font-extrabold uppercase tracking-tight mb-3">Our <span class="text-f1-gold">Origin</span></h3>
+            <div class="h-1 w-28 bg-f1-gold rounded-full mx-auto mb-8 shadow-sm"></div>
+
+            <div class="bg-gray-900 gold-border rounded-2xl p-8 md:p-10 text-left md:text-lg text-gray-300 shadow-lg">
+                <p class="italic text-f1-gold text-2xl mb-4 font-light">The Rise of the Peregrine Warriors</p>
+                <p class="mb-4">It all started with four classmates dreaming of joining F1 in Schools. But then a bold idea changed everything: <strong>“Let’s join 4x4. We get to drive the car!”</strong> We embraced this new challenge and became the <strong>Peregrine Warriors</strong> — named after the fastest bird on Earth and united by our motto: Precision, Power, Perseverance.</p>
+                <p class="mb-4">Season 2024 - 2025 we reached the 7th place of devloping category ...................>
+                    <strong>Season 2025 - 2026 hope and thrill to win!</strong>.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="team" class="py-20">
+        <div class="constrained">
+            <div class="text-center mb-10">
+                <h3 class="text-3xl md:text-5xl font-extrabold uppercase">Meet The <span class="text-f1-gold">Warriors</span></h3>
+                <div class="h-1 w-20 bg-f1-gold rounded-full mx-auto mt-3"></div>
+            </div>
+
+            <p class="text-center text-gray-400 max-w-2xl mx-auto mb-12"> **Click** or tilt the cards to see detailed bios and responsibilities.</p>
+
+            <div id="team-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            </div>
+        </div>
+    </section>
+
+    <section id="prototypes" class="py-20 bg-gradient-to-b from-black/95 to-black/90 border-t border-f1-gold/6">
+        <div class="constrained">
+            <div class="text-center mb-10">
+                <h3 class="text-3xl md:text-5xl font-extrabold uppercase">Engineering <span class="text-f1-gold">Evolution</span></h3>
+                <div class="h-1 w-20 bg-f1-gold rounded-full mx-auto mt-3"></div>
+            </div>
+
+            <div class="relative">
+                <div id="proto-track-container" class="overflow-x-hidden p-2">
+                    <div id="proto-track" class="flex gap-6 items-center p-4 rounded-2xl gold-border bg-gradient-to-br from-gray-900/80 to-black/75">
+                    </div>
+                </div>
+
+                <div class="mt-6 flex items-center justify-center gap-3">
+                    <button id="proto-prev" class="p-3 rounded-full bg-black/30 border border-white/10 text-f1-gold/80 hover:bg-black/70 transition-colors" title="Previous"><svg data-lucide="chevron-left" class="w-5 h-5"></svg></button>
+                    <button id="proto-next" class="p-3 rounded-full bg-black/30 border border-white/10 text-f1-gold/80 hover:bg-black/70 transition-colors" title="Next"><svg data-lucide="chevron-right" class="w-5 h-5"></svg></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="kit" class="py-20">
+        <div class="constrained grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+                <h3 class="text-3xl font-extrabold text-f1-gold mb-4">Peregrine Warriors identity </h3>
+                <p class="text-gray-300 mb-4">The head of the fastest bird on Earth, rendered in sharp black, white, and gold to represent speed, power, and quality. This falcon is shown gripping a tyre, clearly connecting our engineering focus to the 4x4 challenge. Our Apex Uniform features a sleek black base that embodies discipline and technical excellence, energized by bold, sweeping arcs of gold, white, and silver-grey which symbolize precision and controlled motion. The uniform proudly displays the falcon emblem on the chest and the team name in sharp gold lettering, ensuring we make a professional and unified visual statement that reflects our focused ambition to dominate the competition..</p>
+            </div>
+            <div class="flex justify-center">
+                <div class="w-[320px] md:w-[380px] rounded-xl overflow-hidden gold-border p-6 bg-black/80 shadow-lg transform transition-all hover:-translate-y-3">
+                    <img src="T.jpeg"  alt="Apex Uniform" class="w-full rounded-lg object-cover shadow-inner"/>
+                    <img src="Media.png"  alt="Apex Uniform" class="w-full rounded-lg object-cover shadow-inner"/>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="sponsors" class="py-24 bg-gradient-to-t from-black/95 to-black/90 border-t border-f1-gold/6 text-center">
+        <div class="constrained">
+            <h2 class="text-5xl md:text-6xl font-extrabold soft-gold mb-6">WE ARE LOOKING FOR YOU</h2>
+            <p class="text-gray-300 mb-8 max-w-3xl mx-auto">Join our journey as a sponsor and empower the next generation of engineers and innovators. Your support drives excellence and creativity in STEM.</p>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=peregrinewarriorsyas@gmail.com&su=Sponsorship%20Inquiry%20-%20Join%20the%20Flight&body=Hello%20Peregrine%20Warriors%2C%0A%0AI%20am%20interested%20in%20discussing%20sponsorship%20opportunities%20with%20your%20team."
+               target="_blank"
+               class="inline-block px-8 py-3 rounded-full bg-f1-gold text-black font-bold shadow-lg hover:scale-105 transition-transform gold-glow">
+                Join the Flight
+            </a>
+        </div>
+    </section>
+
+    <section id="contact" class="py-20">
+        <div class="constrained text-center">
+            <h3 class="text-3xl font-extrabold mb-4">Contact</h3>
+            <p class="text-gray-300 mb-4">Interested sponsors or mentors — email us:</p>
+
+            <a href="mailto:peregrinewarriorsyas@gmail.com?subject=Sponsor/Mentor%20Inquiry%20from%20Website&body=Hello%20Peregrine%20Warriors%2C%0A%0AI%20am%20interested%20in%20discussing%20sponsorship%20or%20mentorship%20opportunities."
+               class="text-f1-gold font-semibold underline-anim text-lg block mb-2">
+                peregrinewarriorsyas@gmail.com (Open in Mail App)
+            </a>
+
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=peregrinewarriorsyas@gmail.com&su=Sponsor/Mentor%20Inquiry%20from%20Website&body=Hello%20Peregrine%20Warriors%2C%0A%0AI%20am%20interested%20in%20discussing%20sponsorship%20or%20mentorship%20opportunities."
+               target="_blank"
+               class="text-f1-gold font-semibold underline-anim text-sm">
+                Or click here to compose in Gmail
+            </a>
+        </div>
+    </section>
+
+    <footer class="py-8 border-t border-f1-gold/6 text-center text-sm text-gray-500 bg-pw-dark/50">&copy; 2025 Peregrine Warriors 4x4 in Schools. All rights reserved.</footer>
+
+</main>
+
+<script>
+    // ===================================
+    // 📁 Data Configuration
+    // ===================================
+
+    const LOGO_URL = 'Logo.jfif';
+    const TEAM_MEMBERS = [
+        {
+            role: "Team Manager",
+            name: "Shahin",
+            bio: "The leader who guides the team's actions, sets strategic deadlines, and manages all schedules to ensure project completion and team efficiency.",
+            src: 'S.jpeg' // CORRECTED: Uses 'src' property
+        },
+        {
+            role: "3D Designer",
+            name: "Billel",
+            bio: "Responsible for the car body design, and precision 3D modeling, translating concepts into reality.",
+            src: 'B.jpeg' // CORRECTED: Uses 'src' property
+        },
+        {
+            role: "Electronics & Programming Lead",
+            name: "Nadeem",
+            bio: "The coding expert responsible for programming the microcontroller, giving the 4x4 vehicle its intelligence and control. ",
+            src: 'N.jpeg' // CORRECTED: Uses 'src' property
+        },
+        {
+            role: "Design and business strategist",
+            name: "Illia",
+            bio: "Focuses on the design specification, the concept for the striking pit display and supporting business lead.",
+            src: 'I.jpeg' // CORRECTED: Uses 'src' property
+        }
+    ];
+
+    const PROTOTYPES = [
+        { name: "Thunder Wing", phase: "Prototype 3 (Aesthetics Focus)", description: "A bold experiment in stylization, introducing striking visual elements—like a sculpted wing panel and lightning bolt stripe.", image: 'Car1.jfif' },
+        { name: "Stormback", phase: "Prototype 4 (Aerodynamic Insights)", description: "This version introduced advanced shaping inspired by predatory birds in a dive.", image: 'c.png' },
+        { name: "Shadow Talon", phase: "Prototype 5 (Refined Identity)", description: "A near-final evolution showcasing a sharpened body line and aggressive stance.", image: 'Media (2).jfif' },
+        { name: "Apex Dominator", phase: "Final Prototype (Competition Ready)", description: "PRECISION-SCULPTED AND ENGINEERED FOR PERFORMANCE.", image: 'Media.jfif' }
+    ];
+
+    // ===================================
+    // ⚙️ Rendering Functions
+    // ===================================
+
+    function renderTeam(){
+        const grid = document.getElementById('team-grid');
+        TEAM_MEMBERS.forEach(m=>{
+            const card = document.createElement('div');
+            card.className = 'p-6 bg-gray-900 gold-border rounded-2xl text-center tilt glass cursor-pointer transition-transform duration-300 hover:scale-[1.02]';
+            card.innerHTML = `
+          <img src="${m.src}" alt="${m.name}" class="w-28 h-28 mx-auto rounded-full border-4 border-f1-gold/60 mb-4 object-cover" />
+          <h4 class="text-f1-gold font-bold">${m.role}</h4>
+          <p class="uppercase text-sm text-gray-400 tracking-wide mb-3">${m.name}</p>
+          <div class="text-sm text-gray-300 mt-4 bio transition-all duration-300 opacity-0 max-h-0 overflow-hidden">${m.bio}</div>
+        `;
+            grid.appendChild(card);
+
+            // Initialize VanillaTilt effect
+            VanillaTilt.init(card, { max: 12, speed: 400, glare: true, 'max-glare': 0.12 });
+
+            // Click listener for bio expansion
+            card.addEventListener('click', ()=>{
+                const b = card.querySelector('.bio');
+                const isExpanded = b.style.maxHeight === '200px';
+
+                if(!isExpanded){
+                    b.style.maxHeight = '200px'; // Expand
+                    b.style.opacity = 1;
+                    b.style.overflow = 'visible';
+                } else {
+                    b.style.maxHeight = '0'; // Collapse
+                    b.style.opacity = 0;
+                    setTimeout(() => b.style.overflow = 'hidden', 300);
+                }
+            });
+        });
+    }
+
+    function renderPrototypes(){
+        const track = document.getElementById('proto-track');
+        PROTOTYPES.forEach(p=>{
+            const el = document.createElement('div');
+            el.className = 'min-w-[300px] md:min-w-[360px] lg:min-w-[420px] p-4 rounded-xl bg-gray-800 gold-border flex-shrink-0';
+            el.innerHTML = `
+          <img src="${p.image}" alt="${p.name}" class="w-full rounded-lg mb-4 object-cover h-[200px] md:h-[240px]"/>
+          <h4 class="text-f1-gold font-extrabold">${p.name}</h4>
+          <div class="text-sm text-gray-300">${p.phase}</div>
+          <p class="mt-2 text-gray-300 text-sm">${p.description}</p>
+        `;
+            track.appendChild(el);
+        });
+
+        // Draggable setup (more robust)
+        const trackEl = document.getElementById('proto-track');
+        const cards = trackEl.children;
+        const getCardWidth = () => cards.length > 0 ? cards[0].getBoundingClientRect().width + 24 : 0; // Card width + gap (gap-6 in Tailwind)
+        let index = 0;
+
+        function updateSlider(animate = true) {
+            const cardW = getCardWidth();
+            const targetX = -index * cardW;
+            gsap.to(trackEl, { x: targetX, duration: animate ? 0.8 : 0, ease: 'power3.out' });
+        }
+
+        document.getElementById('proto-next').addEventListener('click', ()=>{
+            index = Math.min(index + 1, PROTOTYPES.length - 1);
+            updateSlider();
+        });
+        document.getElementById('proto-prev').addEventListener('click', ()=>{
+            index = Math.max(0, index - 1);
+            updateSlider();
+        });
+
+        const initDraggable = () => {
+            const cardW = getCardWidth();
+            const totalW = cardW * PROTOTYPES.length;
+            const containerW = trackEl.parentElement.clientWidth;
+            const minX = Math.min(0, -(totalW - containerW + 12)); // Adjust for track padding/margin
+
+            const existingDraggable = Draggable.get(trackEl);
+            if (existingDraggable) existingDraggable.kill();
+
+            if (totalW > containerW) {
+                Draggable.create(trackEl, {
+                    type: 'x',
+                    bounds: { minX: minX, maxX: 0 },
+                    inertia: true,
+                    onDragEnd: function() {
+                        const currentX = this.x;
+                        index = Math.round(currentX / -cardW);
+                        index = Math.min(PROTOTYPES.length - 1, Math.max(0, index));
+                        updateSlider();
+                    }
+                });
+            }
+        };
+
+        // Initialize and re-initialize on resize
+        window.addEventListener('resize', initDraggable);
+        setTimeout(initDraggable, 100); // Initial call after content load
+    }
+
+    // ===================================
+    // ✨ Animation & Utility Functions
+    // ===================================
+
+    // Particle Canvas for Hero Section
+    function startParticles(){
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        let W = canvas.width = innerWidth; let H = canvas.height = innerHeight;
+        const particles = [];
+        function resize(){ W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+        addEventListener('resize', resize);
+        function create(){ for(let i=0;i<100;i++){ particles.push({x: Math.random()*W, y: Math.random()*H, r: Math.random()*1.6+0.4, vx: (Math.random()-0.5)*0.2, vy: -Math.random()*0.2-0.02, alpha: Math.random()*0.9+0.1}); } }
+        create();
+        function tick(){ ctx.clearRect(0,0,W,H); for(const p of particles){ p.x += p.vx; p.y += p.vy; p.alpha -= 0.0006; if(p.alpha<=0){ p.x = Math.random()*W; p.y = H + 20; p.alpha = Math.random()*0.9+0.1; p.vx = (Math.random()-0.5)*0.2; p.vy = -Math.random()*0.2-0.02; }
+            ctx.beginPath(); ctx.fillStyle = `rgba(252,211,77,${p.alpha})`; ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); }
+            requestAnimationFrame(tick);
+        }
+        tick();
+    }
+
+    // GSAP Scroll Reveals and Initial Animations
+    function initGSAP(){
+        if(!window.gsap) return;
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Split letters for "Engineered"
+        const t = document.getElementById('engineered');
+        const text = t.textContent.trim();
+        t.innerHTML = text.split('').map(ch=>`<span class="split-letter-span">${ch===' ' ? '&nbsp;' : ch}</span>`).join('');
+        gsap.to('.split-letter-span',{y:0, stagger:0.02, duration:0.8, ease:'power3.out'});
+
+        // Hero initial load animations
+        gsap.from('#hero-logo',{scale:0.9,opacity:0,duration:1,delay:0.1,ease:'power3.out'});
+        gsap.from('#vehicle',{y:30,opacity:0,duration:1,delay:0.3,ease:'power3.out'});
+
+        // Team card stagger reveal on scroll
+        gsap.utils.toArray('#team-grid > div').forEach((el,i)=>{ gsap.from(el,{y:20,opacity:0,duration:0.8,delay:0.15*(i*0.6),scrollTrigger:{trigger:el,start:'top 85%'}}); });
+
+        // Prototype stagger reveal on scroll
+        gsap.utils.toArray('#proto-track > div').forEach((el,i)=>{ gsap.from(el,{y:20,opacity:0,duration:0.8,delay:0.12*i,scrollTrigger:{trigger:el.parentElement.parentElement,start:'top 75%'}}); });
+    }
+
+    // Active Nav Link Tracker
+    function initActiveNav(){
+        const sections = gsap.utils.toArray("section");
+        const navLinks = gsap.utils.toArray("#main-nav a");
+
+        sections.forEach((section) => {
+            ScrollTrigger.create({
+                trigger: section,
+                start: "top center",
+                end: "bottom center",
+                onToggle: self => {
+                    const id = section.getAttribute("id");
+                    const link = navLinks.find(a => a.getAttribute("href") === `#${id}`);
+                    if (link) {
+                        link.classList.toggle("text-f1-gold", self.isActive);
+                        link.classList.toggle("text-gray-300", !self.isActive);
+                    }
+                }
+            });
+        });
+    }
+
+    // Audio setup
+    let sound;
+    function initAudio(){
+        const audioSrc = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/215442/sardine.mp3'; // Example public domain sound
+
+        sound = new Howl({
+            src: [audioSrc],
+            html5: true,
+            loop: true,
+            volume: 0.5,
+            onplay: () => { document.getElementById('audio-toggle').innerHTML = '<svg data-lucide="pause" class="h-6 w-6 text-f1-gold"></svg>'; },
+            onpause: () => { document.getElementById('audio-toggle').innerHTML = '<svg data-lucide="play" class="h-6 w-6 text-f1-gold"></svg>'; }
+        });
+
+        const btn = document.getElementById('audio-toggle');
+        const mute = document.getElementById('mute-toggle');
+        let playing = false;
+
+        btn.addEventListener('click', ()=>{
+            if(!playing){ sound.play(); playing=true; btn.title='Pause music'; }
+            else{ sound.pause(); playing=false; btn.title='Play music'; }
+        });
+
+        mute.addEventListener('click', ()=>{
+            Howler.mute(!Howler.mute());
+            mute.classList.toggle('opacity-40', Howler.mute());
+            mute.title = Howler.mute() ? 'Unmute' : 'Mute';
+        });
+    }
+
+    // ===================================
+    // 🚀 Initialization
+    // ===================================
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+        // Render content first
+        renderTeam();
+        renderPrototypes();
+
+        // Initialize features
+        startParticles();
+        initGSAP();
+        initAudio();
+        initActiveNav();
+
+        // Create lucide icons dynamically
+        if(window.lucide && lucide.createIcons) lucide.createIcons();
+    });
+
+</script>
+</body>
+</html>
